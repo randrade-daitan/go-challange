@@ -54,8 +54,16 @@ func (db *Database) GetAllTasks() ([]Task, error) {
 }
 
 func (db *Database) GetTaskByID(id int64) (Task, error) {
-	// TODO b.ii.2: Implement get task by id
 	var task Task
+
+	row := db.QueryRow("SELECT * FROM task WHERE id = ?", id)
+	if err := row.Scan(&task.ID, &task.Name, &task.Completed); err != nil {
+		if err == sql.ErrNoRows {
+			return task, fmt.Errorf("GetTaskByID %d: no such task", id)
+		}
+		return task, fmt.Errorf("GetTaskByID %d: %v", id, err)
+	}
+
 	return task, nil
 }
 
