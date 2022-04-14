@@ -1,12 +1,12 @@
 package main
 
 import (
-	internal "challange/internal/repository"
+	"challange/internal/repository"
 	"fmt"
 )
 
 func main() {
-	repo := internal.NewDatabase()
+	repo := repository.NewDatabase()
 
 	allTasks, _ := repo.GetAllTasks()
 	for _, task := range allTasks {
@@ -16,14 +16,14 @@ func main() {
 	currentTask, _ := repo.GetTaskByID(6)
 	fmt.Printf("Current task is: %q.\n", currentTask.Name)
 
-	newTask := internal.Task{
+	newTask := repository.Task{
 		Name:      "Checkout the real project",
 		Completed: false,
 	}
 	newID, _ := repo.AddTask(newTask)
 	fmt.Printf("Added new task at the end, id is %v.\n", newID)
 
-	taskToEdit := internal.Task{
+	taskToEdit := repository.Task{
 		ID:        newID,
 		Name:      "Celebrate",
 		Completed: false,

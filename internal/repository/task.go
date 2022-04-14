@@ -1,4 +1,4 @@
-package internal
+package repository
 
 type Task struct {
 	ID        int64
