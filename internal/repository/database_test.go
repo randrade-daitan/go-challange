@@ -35,7 +35,26 @@ func TestFetchOperations(t *testing.T) {
 			t.Errorf("could not fetch task by id: %v", err)
 		}
 		if task.ID != 15 {
-			t.Errorf("unexpected task id")
+			t.Errorf("unexpected task id: %v", task.ID)
+		}
+	})
+
+	t.Run("add new task", func(t *testing.T) {
+		task := Task{10, "Title", false}
+		database, mock, _ := newMockDatabase(t)
+
+		mock.
+			ExpectExec("INSERT INTO task (name, completed) VALUES (?, ?)").
+			WithArgs(task.Name, task.Completed).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		id, err := database.AddTask(task)
+
+		if err != nil {
+			t.Errorf("could not add task: %v", err)
+		}
+		if id != 1 {
+			t.Errorf("unexpected task id: %v", id)
 		}
 	})
 }

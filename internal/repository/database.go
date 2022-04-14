@@ -74,8 +74,15 @@ func (db *Database) GetTaskByCompletion(isCompleted bool) (Task, error) {
 }
 
 func (db *Database) AddTask(t Task) (int64, error) {
-	// TODO b.ii.3: Add a task
-	return 0, nil
+	result, err := db.Exec("INSERT INTO task (name, completed) VALUES (?, ?)", t.Name, t.Completed)
+	if err != nil {
+		return 0, fmt.Errorf("addTask: %v", err)
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("addTask: %v", err)
+	}
+	return id, nil
 }
 
 func (db *Database) EditTask(t Task) error {

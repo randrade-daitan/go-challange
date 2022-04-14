@@ -10,9 +10,16 @@ func main() {
 
 	allTasks, _ := repo.GetAllTasks()
 	for _, task := range allTasks {
-		fmt.Printf("Task %q completion is %t.\n", task.Name, task.Completed)
+		fmt.Printf("Task %v: %q completion is %t.\n", task.ID, task.Name, task.Completed)
 	}
 
 	currentTask, _ := repo.GetTaskByID(6)
-	fmt.Printf("Task %q is the current being done.\n", currentTask.Name)
+	fmt.Printf("Current task is: %q.\n", currentTask.Name)
+
+	newTask := internal.Task{
+		Name:      "Checkout the real project",
+		Completed: false,
+	}
+	newID, _ := repo.AddTask(newTask)
+	fmt.Printf("Added new task at the end, id is %v.\n", newID)
 }
