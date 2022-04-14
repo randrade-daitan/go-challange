@@ -31,9 +31,39 @@ func NewDatabase() Repository {
 }
 
 func (db *Database) GetAllTasks() ([]Task, error) {
-	var tasks []Task
+	return db.queryForTasks("SELECT * FROM task")
+}
 
-	rows, err := db.Query("SELECT * FROM task")
+func (db *Database) GetTaskByID(id int64) (Task, error) {
+	return db.queryRowForTask("SELECT * FROM task WHERE id = ?", id)
+}
+
+func (db *Database) GetTasksByCompletion(isCompleted bool) ([]Task, error) {
+	return db.queryForTasks("SELECT * FROM task WHERE completion = ?", isCompleted)
+}
+
+func (db *Database) AddTask(t Task) (int64, error) {
+	result, err := db.executeQuery("INSERT INTO task (name, completed) VALUES (?, ?)", t.Name, t.Completed)
+	if err != nil {
+		return 0, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("addTask: %v", err)
+	}
+
+	return id, nil
+}
+
+func (db *Database) EditTask(t Task) error {
+	_, err := db.executeQuery("UPDATE task SET name = ?, completed = ? WHERE id = ?", t.Name, t.Completed, t.ID)
+	return err
+}
+
+func (db *Database) queryForTasks(query string, args ...any) ([]Task, error) {
+	tasks := []Task{}
+	rows, err := db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch tasks rows: %v", err)
 	}
@@ -53,42 +83,21 @@ func (db *Database) GetAllTasks() ([]Task, error) {
 	return tasks, nil
 }
 
-func (db *Database) GetTaskByID(id int64) (Task, error) {
+func (db *Database) queryRowForTask(query string, args ...any) (Task, error) {
 	var task Task
 
-	row := db.QueryRow("SELECT * FROM task WHERE id = ?", id)
+	row := db.QueryRow(query, args...)
 	if err := row.Scan(&task.ID, &task.Name, &task.Completed); err != nil {
-		if err == sql.ErrNoRows {
-			return task, fmt.Errorf("GetTaskByID %d: no such task", id)
-		}
-		return task, fmt.Errorf("GetTaskByID %d: %v", id, err)
+		return task, fmt.Errorf("error scanning task row: %v", err)
 	}
 
 	return task, nil
 }
 
-func (db *Database) GetTaskByCompletion(isCompleted bool) (Task, error) {
-	// TODO b.ii.5: Implement get task by completion
-	var task Task
-	return task, nil
-}
-
-func (db *Database) AddTask(t Task) (int64, error) {
-	result, err := db.Exec("INSERT INTO task (name, completed) VALUES (?, ?)", t.Name, t.Completed)
+func (db *Database) executeQuery(query string, args ...any) (sql.Result, error) {
+	result, err := db.Exec(query, args...)
 	if err != nil {
-		return 0, fmt.Errorf("addTask: %v", err)
+		return nil, fmt.Errorf("could not execute query: %v", err)
 	}
-	id, err := result.LastInsertId()
-	if err != nil {
-		return 0, fmt.Errorf("addTask: %v", err)
-	}
-	return id, nil
-}
-
-func (db *Database) EditTask(t Task) error {
-	_, err := db.Exec("UPDATE task SET name = ?, completed = ? WHERE id = ?", t.Name, t.Completed, t.ID)
-	if err != nil {
-		return fmt.Errorf("addTask: %v", err)
-	}
-	return nil
+	return result, nil
 }
