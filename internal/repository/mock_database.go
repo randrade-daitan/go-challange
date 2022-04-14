@@ -20,8 +20,15 @@ func (db *MockDatabase) GetTaskByID(id int64) (Task, error) {
 }
 
 func (db *MockDatabase) GetTasksByCompletion(isCompleted bool) ([]Task, error) {
-	// TODO Will be implemented on c.iv.2
-	return nil, nil
+	tasks := []Task{}
+
+	for _, task := range db.tasks {
+		if task.Completed == isCompleted {
+			tasks = append(tasks, task)
+		}
+	}
+
+	return tasks, nil
 }
 
 func (db *MockDatabase) AddTask(t Task) (int64, error) {

@@ -1,8 +1,10 @@
 package api
 
 import (
+	"bytes"
 	"challange/internal/repository"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -22,15 +24,28 @@ func TestFetchOperations(t *testing.T) {
 
 	t.Run("serve all tasks", func(t *testing.T) {
 		request := newGetAllTasksRequest()
-		response := httptest.NewRecorder()
-
-		server.ServeHTTP(response, request)
-		assertStatus(t, response.Code, http.StatusOK)
-		assertContentType(t, response, jsonContentType)
-
-		got := getTasksFromResponse(t, response.Body)
+		response := performFetchRequest(server, request, t)
+		got := getTasksFromResponse(t, response)
 		if len(got) != len(tasks) {
 			t.Errorf("did not get correct tasks count")
+		}
+	})
+
+	t.Run("serve completed tasks", func(t *testing.T) {
+		request := newGetTasksByCompletionRequest(true)
+		response := performFetchRequest(server, request, t)
+		got := getTasksFromResponse(t, response)
+		if len(got) != 3 {
+			t.Errorf("did not get correct completed tasks count")
+		}
+	})
+
+	t.Run("serve incompleted tasks", func(t *testing.T) {
+		request := newGetTasksByCompletionRequest(false)
+		response := performFetchRequest(server, request, t)
+		got := getTasksFromResponse(t, response)
+		if len(got) != 2 {
+			t.Errorf("did not get correct completed tasks count")
 		}
 	})
 }
@@ -38,6 +53,21 @@ func TestFetchOperations(t *testing.T) {
 func newGetAllTasksRequest() *http.Request {
 	req, _ := http.NewRequest(http.MethodGet, "/tasks", nil)
 	return req
+}
+
+func newGetTasksByCompletionRequest(isCompleted bool) *http.Request {
+	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/tasks?completed=%v", isCompleted), nil)
+	return req
+}
+
+func performFetchRequest(server Api, r *http.Request, t *testing.T) *bytes.Buffer {
+	response := httptest.NewRecorder()
+
+	server.ServeHTTP(response, r)
+	assertStatus(t, response.Code, http.StatusOK)
+	assertContentType(t, response, jsonContentType)
+
+	return response.Body
 }
 
 func assertStatus(t testing.TB, got, want int) {
