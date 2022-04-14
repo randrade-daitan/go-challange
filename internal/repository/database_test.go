@@ -27,8 +27,12 @@ func TestFetchOperations(t *testing.T) {
 
 	t.Run("get task by id", func(t *testing.T) {
 		database, mock, rows := newMockDatabase(t)
+
 		rows.AddRow(15, "task", false)
-		mock.ExpectQuery("SELECT * FROM task WHERE id = ?").WillReturnRows(rows)
+		mock.
+			ExpectQuery("SELECT * FROM task WHERE id = ?").
+			WillReturnRows(rows)
+
 		task, err := database.GetTaskByID(15)
 
 		if err != nil {
@@ -55,6 +59,22 @@ func TestFetchOperations(t *testing.T) {
 		}
 		if id != 1 {
 			t.Errorf("unexpected task id: %v", id)
+		}
+	})
+
+	t.Run("edit existing task", func(t *testing.T) {
+		task := Task{2, "edited", true}
+		database, mock, rows := newMockDatabase(t)
+
+		rows.AddRow(2, "task", false)
+		mock.
+			ExpectExec("UPDATE task SET name = ?, completed = ? WHERE id = ?").
+			WithArgs(task.Name, task.Completed, task.ID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		err := database.EditTask(task)
+		if err != nil {
+			t.Errorf("could not add task: %v", err)
 		}
 	})
 }

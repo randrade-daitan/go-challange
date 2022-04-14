@@ -86,6 +86,9 @@ func (db *Database) AddTask(t Task) (int64, error) {
 }
 
 func (db *Database) EditTask(t Task) error {
-	// TODO b.ii.4: Update a task
+	_, err := db.Exec("UPDATE task SET name = ?, completed = ? WHERE id = ?", t.Name, t.Completed, t.ID)
+	if err != nil {
+		return fmt.Errorf("addTask: %v", err)
+	}
 	return nil
 }
