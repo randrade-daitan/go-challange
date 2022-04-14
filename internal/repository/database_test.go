@@ -109,7 +109,7 @@ func testFetchTestsByCompletion(t *testing.T, isCompleted bool) {
 
 	rowCount := addRandomRows(rows, Task{0, "", isCompleted})
 	mock.
-		ExpectQuery("SELECT * FROM task WHERE completion = ?").
+		ExpectQuery("SELECT * FROM task WHERE completed = ?").
 		WithArgs(isCompleted).
 		WillReturnRows(rows)
 

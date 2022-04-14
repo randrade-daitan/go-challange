@@ -31,4 +31,7 @@ func main() {
 	repo.EditTask(taskToEdit)
 	editedTask, _ := repo.GetTaskByID(newID)
 	fmt.Printf("Edited task %v with new name: %q.\n", editedTask.ID, editedTask.Name)
+
+	completedTasks, _ := repo.GetTasksByCompletion(true)
+	fmt.Printf("Already done %v tasks!.\n", len(completedTasks))
 }

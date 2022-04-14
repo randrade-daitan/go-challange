@@ -39,7 +39,7 @@ func (db *Database) GetTaskByID(id int64) (Task, error) {
 }
 
 func (db *Database) GetTasksByCompletion(isCompleted bool) ([]Task, error) {
-	return db.queryForTasks("SELECT * FROM task WHERE completion = ?", isCompleted)
+	return db.queryForTasks("SELECT * FROM task WHERE completed = ?", isCompleted)
 }
 
 func (db *Database) AddTask(t Task) (int64, error) {
