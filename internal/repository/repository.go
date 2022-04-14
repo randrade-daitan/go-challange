@@ -1,10 +1,10 @@
 package internal
 
-type repository interface {
-	getAllTasks() ([]task, error)
-	getTaskByID(id int64) (task, error)
+type Repository interface {
+	GetAllTasks() ([]Task, error)
+	GetTaskByID(id int64) (Task, error)
+	GetTaskByCompletion(isCompleted bool) (Task, error)
 
-	addTask(t task) (int64, error)
-	editTask(t task) error
-	deleteTask(t task) error
+	AddTask(t Task) (int64, error)
+	EditTask(t Task) error
 }

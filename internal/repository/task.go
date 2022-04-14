@@ -1,7 +1,7 @@
 package internal
 
-type task struct {
-	id        int64
-	name      string
-	completed bool
+type Task struct {
+	ID        int64
+	Name      string
+	Completed bool
 }
