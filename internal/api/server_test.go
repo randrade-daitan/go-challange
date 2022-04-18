@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestFetchOperations(t *testing.T) {
+func TestGetOperations(t *testing.T) {
 	tasks := []repository.Task{
 		{ID: 0, Name: "a", Completed: true},
 		{ID: 1, Name: "b", Completed: false},
@@ -18,8 +18,7 @@ func TestFetchOperations(t *testing.T) {
 		{ID: 3, Name: "d", Completed: true},
 		{ID: 4, Name: "e", Completed: false},
 	}
-	db := repository.NewMockDatabase(tasks, nil)
-	server := NewServer(db)
+	server := newTestServer(tasks)
 
 	t.Run("serve all tasks", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/tasks", nil)
@@ -70,29 +69,47 @@ func TestFetchOperations(t *testing.T) {
 	})
 
 	t.Run("serve task by no id", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/tasks/", nil)
-		response := httptest.NewRecorder()
-
-		server.ServeHTTP(response, request)
-		assertStatus(t, response.Code, http.StatusBadRequest)
+		r, _ := http.NewRequest(http.MethodGet, "/tasks/", nil)
+		performRequest(server, r, t, http.StatusBadRequest)
 	})
 
 	t.Run("serve task by bad id", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/tasks/bad", nil)
-		response := httptest.NewRecorder()
-
-		server.ServeHTTP(response, request)
-		assertStatus(t, response.Code, http.StatusBadRequest)
+		r, _ := http.NewRequest(http.MethodGet, "/tasks/bad", nil)
+		performRequest(server, r, t, http.StatusBadRequest)
 	})
 }
 
-func performFetchRequest(server Api, r *http.Request, t *testing.T) *bytes.Buffer {
+func TestPostOperations(t *testing.T) {
+	tasks := []repository.Task{}
+	server := newTestServer(tasks)
+
+	t.Run("serve add task", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPost, "/tasks", nil)
+		response := performRequest(server, request, t, http.StatusOK)
+
+		if response.Body.String() != "0" {
+			t.Errorf("did not get correct completed tasks count")
+		}
+	})
+}
+
+func newTestServer(tasks []repository.Task) Api {
+	db := repository.NewMockDatabase(tasks, nil)
+	return NewServer(db)
+}
+
+func performRequest(server Api, r *http.Request, t *testing.T, expectingCode int) *httptest.ResponseRecorder {
 	response := httptest.NewRecorder()
 
 	server.ServeHTTP(response, r)
-	assertStatus(t, response.Code, http.StatusOK)
-	assertContentType(t, response, jsonContentType)
+	assertStatus(t, response.Code, expectingCode)
 
+	return response
+}
+
+func performFetchRequest(server Api, r *http.Request, t *testing.T) *bytes.Buffer {
+	response := performRequest(server, r, t, http.StatusOK)
+	assertContentType(t, response, jsonContentType)
 	return response.Body
 }
 

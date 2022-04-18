@@ -3,6 +3,7 @@ package api
 import (
 	"challange/internal/repository"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -33,6 +34,8 @@ func (server *Server) handleTasks(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		server.handleGetTasks(w, r)
+	case http.MethodPost:
+		server.createNewTask(w, r)
 	}
 }
 
@@ -82,6 +85,19 @@ func (server *Server) getTasksByCompletion(isCompleted string, w http.ResponseWr
 func (server *Server) getTaskById(id int64, w http.ResponseWriter, r *http.Request) {
 	t, e := server.database.GetTaskByID(id)
 	handleResponse(t, e, w)
+}
+
+func (server *Server) createNewTask(w http.ResponseWriter, r *http.Request) {
+	t := repository.Task{
+		ID:        0,
+		Name:      "",
+		Completed: false,
+	}
+	id, e := server.database.AddTask(t)
+	if handleError(e, w, http.StatusInternalServerError) {
+		return
+	}
+	fmt.Fprint(w, id)
 }
 
 func handleResponse(r any, e error, w http.ResponseWriter) {
