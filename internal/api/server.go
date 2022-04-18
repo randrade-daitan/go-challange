@@ -4,8 +4,11 @@ import (
 	"challange/internal/repository"
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"strconv"
 )
+
+var validPath = regexp.MustCompile("^/(tasks)/([0-9]+)$")
 
 type Server struct {
 	database repository.Repository
@@ -19,6 +22,7 @@ func NewServer(db repository.Repository) Api {
 
 	router := http.NewServeMux()
 	router.Handle("/tasks", http.HandlerFunc(server.handleTasks))
+	router.Handle("/tasks/", http.HandlerFunc(server.handleTask))
 
 	server.Handler = router
 
@@ -26,12 +30,34 @@ func NewServer(db repository.Repository) Api {
 }
 
 func (server *Server) handleTasks(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query()
+	switch r.Method {
+	case http.MethodGet:
+		server.handleGetTasks(w, r)
+	}
+}
 
-	if isCompleted := query.Get("completed"); isCompleted != "" {
-		c, err := strconv.ParseBool(isCompleted)
-		handleRequestError(err, w)
-		server.getTasksByCompletion(c, w, r)
+func (server *Server) handleTask(w http.ResponseWriter, r *http.Request) {
+	m := validPath.FindStringSubmatch(r.URL.Path)
+	if m == nil || len(m) < 3 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	i, e := strconv.Atoi(m[2])
+	if handleError(e, w, http.StatusNotFound) {
+		return
+	}
+
+	id := int64(i)
+	switch r.Method {
+	case http.MethodGet:
+		server.getTaskById(id, w, r)
+	}
+}
+
+func (server *Server) handleGetTasks(w http.ResponseWriter, r *http.Request) {
+	if isCompleted := r.URL.Query().Get("completed"); isCompleted != "" {
+		server.getTasksByCompletion(isCompleted, w, r)
 		return
 	}
 
@@ -40,32 +66,36 @@ func (server *Server) handleTasks(w http.ResponseWriter, r *http.Request) {
 
 func (server *Server) getAllTasks(w http.ResponseWriter, r *http.Request) {
 	t, e := server.database.GetAllTasks()
-	handleTasksRequest(t, e, w)
+	handleResponse(t, e, w)
 }
 
-func (server *Server) getTasksByCompletion(isCompleted bool, w http.ResponseWriter, r *http.Request) {
-	t, e := server.database.GetTasksByCompletion(isCompleted)
-	handleTasksRequest(t, e, w)
-}
-
-func handleTasksRequest(tasks []repository.Task, err error, w http.ResponseWriter) {
-	handleDatabaseError(err, w)
-	encodeTasks(tasks, w)
-}
-
-func handleRequestError(err error, w http.ResponseWriter) {
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+func (server *Server) getTasksByCompletion(isCompleted string, w http.ResponseWriter, r *http.Request) {
+	c, err := strconv.ParseBool(isCompleted)
+	if handleError(err, w, http.StatusBadRequest) {
+		return
 	}
+
+	t, e := server.database.GetTasksByCompletion(c)
+	handleResponse(t, e, w)
 }
 
-func handleDatabaseError(err error, w http.ResponseWriter) {
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+func (server *Server) getTaskById(id int64, w http.ResponseWriter, r *http.Request) {
+	t, e := server.database.GetTaskByID(id)
+	handleResponse(t, e, w)
+}
+
+func handleResponse(r any, e error, w http.ResponseWriter) {
+	if handleError(e, w, http.StatusInternalServerError) {
+		return
 	}
-}
-
-func encodeTasks(tasks []repository.Task, w http.ResponseWriter) {
 	w.Header().Set("content-type", jsonContentType)
-	json.NewEncoder(w).Encode(tasks)
+	json.NewEncoder(w).Encode(r)
+}
+
+func handleError(err error, w http.ResponseWriter, code int) (hadError bool) {
+	if err != nil {
+		hadError = true
+		http.Error(w, err.Error(), code)
+	}
+	return
 }

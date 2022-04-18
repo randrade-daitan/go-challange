@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"challange/internal/repository"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -23,41 +22,68 @@ func TestFetchOperations(t *testing.T) {
 	server := NewServer(db)
 
 	t.Run("serve all tasks", func(t *testing.T) {
-		request := newGetAllTasksRequest()
+		request, _ := http.NewRequest(http.MethodGet, "/tasks", nil)
 		response := performFetchRequest(server, request, t)
-		got := getTasksFromResponse(t, response)
+
+		var got []repository.Task
+		parseResponse(t, response, &got)
+
 		if len(got) != len(tasks) {
 			t.Errorf("did not get correct tasks count")
 		}
 	})
 
 	t.Run("serve completed tasks", func(t *testing.T) {
-		request := newGetTasksByCompletionRequest(true)
+		request, _ := http.NewRequest(http.MethodGet, "/tasks?completed=true", nil)
 		response := performFetchRequest(server, request, t)
-		got := getTasksFromResponse(t, response)
+
+		var got []repository.Task
+		parseResponse(t, response, &got)
+
 		if len(got) != 3 {
 			t.Errorf("did not get correct completed tasks count")
 		}
 	})
 
 	t.Run("serve incompleted tasks", func(t *testing.T) {
-		request := newGetTasksByCompletionRequest(false)
+		request, _ := http.NewRequest(http.MethodGet, "/tasks?completed=false", nil)
 		response := performFetchRequest(server, request, t)
-		got := getTasksFromResponse(t, response)
+
+		var got []repository.Task
+		parseResponse(t, response, &got)
+
 		if len(got) != 2 {
 			t.Errorf("did not get correct completed tasks count")
 		}
 	})
-}
 
-func newGetAllTasksRequest() *http.Request {
-	req, _ := http.NewRequest(http.MethodGet, "/tasks", nil)
-	return req
-}
+	t.Run("serve task by id", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodGet, "/tasks/1", nil)
+		response := performFetchRequest(server, request, t)
 
-func newGetTasksByCompletionRequest(isCompleted bool) *http.Request {
-	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/tasks?completed=%v", isCompleted), nil)
-	return req
+		var got repository.Task
+		parseResponse(t, response, &got)
+
+		if got.ID == 1 && got.Name == "b" {
+			t.Errorf("did not get correct task by id")
+		}
+	})
+
+	t.Run("serve task by no id", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodGet, "/tasks/", nil)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+		assertStatus(t, response.Code, http.StatusBadRequest)
+	})
+
+	t.Run("serve task by bad id", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodGet, "/tasks/bad", nil)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+		assertStatus(t, response.Code, http.StatusBadRequest)
+	})
 }
 
 func performFetchRequest(server Api, r *http.Request, t *testing.T) *bytes.Buffer {
@@ -84,10 +110,10 @@ func assertContentType(t testing.TB, response *httptest.ResponseRecorder, want s
 	}
 }
 
-func getTasksFromResponse(t testing.TB, body io.Reader) (tasks []repository.Task) {
+func parseResponse[T any](t testing.TB, body io.Reader, r *T) {
 	t.Helper()
 
-	err := json.NewDecoder(body).Decode(&tasks)
+	err := json.NewDecoder(body).Decode(r)
 	if err != nil {
 		t.Fatalf("unable to parse response from server %q: %v", body, err)
 	}
