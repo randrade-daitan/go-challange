@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"challange/internal/repository"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -18,7 +19,7 @@ func TestGetOperations(t *testing.T) {
 		{ID: 3, Name: "d", Completed: true},
 		{ID: 4, Name: "e", Completed: false},
 	}
-	server := newTestServer(tasks)
+	server, _ := newTestServer(tasks)
 
 	t.Run("serve all tasks", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/tasks", nil)
@@ -81,7 +82,7 @@ func TestGetOperations(t *testing.T) {
 
 func TestPostOperations(t *testing.T) {
 	tasks := []repository.Task{}
-	server := newTestServer(tasks)
+	server, _ := newTestServer(tasks)
 
 	t.Run("serve add task", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/tasks", nil)
@@ -93,9 +94,35 @@ func TestPostOperations(t *testing.T) {
 	})
 }
 
-func newTestServer(tasks []repository.Task) Api {
+func TestPutOperations(t *testing.T) {
+	tasks := []repository.Task{
+		{ID: 6, Name: "test", Completed: false},
+	}
+	server, db := newTestServer(tasks)
+
+	t.Run("serve add task", func(t *testing.T) {
+		var editedId int64 = 6
+		baseTask := repository.Task{
+			ID:        0,
+			Name:      "Edited",
+			Completed: true,
+		}
+
+		body, _ := json.Marshal(baseTask)
+		request, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/tasks/%v", editedId), bytes.NewBuffer(body))
+		performRequest(server, request, t, http.StatusOK)
+
+		editedTask, _ := db.GetTaskByID(editedId)
+		if editedTask.Name != baseTask.Name ||
+			editedTask.Completed != baseTask.Completed {
+			t.Errorf("did not get edited task correctly")
+		}
+	})
+}
+
+func newTestServer(tasks []repository.Task) (Api, repository.Repository) {
 	db := repository.NewMockDatabase(tasks, nil)
-	return NewServer(db)
+	return NewServer(db), db
 }
 
 func performRequest(server Api, r *http.Request, t *testing.T, expectingCode int) *httptest.ResponseRecorder {
@@ -134,6 +161,4 @@ func parseResponse[T any](t testing.TB, body io.Reader, r *T) {
 	if err != nil {
 		t.Fatalf("unable to parse response from server %q: %v", body, err)
 	}
-
-	return
 }

@@ -55,6 +55,8 @@ func (server *Server) handleTask(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		server.getTaskById(id, w, r)
+	case http.MethodPut:
+		server.updateTaskById(id, w, r)
 	}
 }
 
@@ -98,6 +100,22 @@ func (server *Server) createNewTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprint(w, id)
+}
+
+func (server *Server) updateTaskById(id int64, w http.ResponseWriter, r *http.Request) {
+	var t repository.Task
+	decoreErr := json.NewDecoder(r.Body).Decode(&t)
+	if handleError(decoreErr, w, http.StatusBadRequest) {
+		return
+	}
+
+	t.ID = id
+	editErr := server.database.EditTask(t)
+	if handleError(editErr, w, http.StatusInternalServerError) {
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func handleResponse(r any, e error, w http.ResponseWriter) {

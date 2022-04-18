@@ -1,5 +1,7 @@
 package repository
 
+import "errors"
+
 type MockDatabase struct {
 	tasks []Task
 	err   error
@@ -14,9 +16,13 @@ func (db *MockDatabase) GetAllTasks() ([]Task, error) {
 }
 
 func (db *MockDatabase) GetTaskByID(id int64) (Task, error) {
-	// TODO Will be implemented on c.iv.3
 	var task Task
-	return task, nil
+	for _, task := range db.tasks {
+		if task.ID == id {
+			return task, nil
+		}
+	}
+	return task, errors.New("could not find task")
 }
 
 func (db *MockDatabase) GetTasksByCompletion(isCompleted bool) ([]Task, error) {
@@ -37,6 +43,13 @@ func (db *MockDatabase) AddTask(t Task) (int64, error) {
 }
 
 func (db *MockDatabase) EditTask(t Task) error {
-	// TODO Will be implemented on c.iv.5
-	return nil
+	for i, task := range db.tasks {
+		if task.ID == t.ID {
+			task.Name = t.Name
+			task.Completed = t.Completed
+			db.tasks[i] = task
+			return nil
+		}
+	}
+	return errors.New("could not find task to edit")
 }
