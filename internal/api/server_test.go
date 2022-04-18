@@ -58,13 +58,14 @@ func TestGetOperations(t *testing.T) {
 	})
 
 	t.Run("serve task by id", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/tasks/1", nil)
+		id := int64(1)
+		request, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/tasks/%v", id), nil)
 		response := performFetchRequest(server, request, t)
 
 		var got repository.Task
 		parseResponse(t, response, &got)
 
-		if got.ID == 1 && got.Name == "b" {
+		if got.ID != id || got.Name != "b" {
 			t.Errorf("did not get correct task by id")
 		}
 	})
@@ -81,14 +82,16 @@ func TestGetOperations(t *testing.T) {
 }
 
 func TestPostOperations(t *testing.T) {
-	tasks := []repository.Task{}
+	tasks := []repository.Task{
+		{ID: 0, Name: "", Completed: false},
+	}
 	server, _ := newTestServer(tasks)
 
 	t.Run("serve add task", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/tasks", nil)
 		response := performRequest(server, request, t, http.StatusOK)
 
-		if response.Body.String() != "0" {
+		if response.Body.String() != "1" {
 			t.Errorf("did not get correct completed tasks count")
 		}
 	})

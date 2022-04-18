@@ -38,8 +38,10 @@ func (db *MockDatabase) GetTasksByCompletion(isCompleted bool) ([]Task, error) {
 }
 
 func (db *MockDatabase) AddTask(t Task) (int64, error) {
-	// TODO Will be implemented on c.iv.4
-	return 0, nil
+	newId := int64(len(db.tasks))
+	t.ID = newId
+	db.tasks = append(db.tasks, t)
+	return newId, nil
 }
 
 func (db *MockDatabase) EditTask(t Task) error {
@@ -51,5 +53,6 @@ func (db *MockDatabase) EditTask(t Task) error {
 			return nil
 		}
 	}
+
 	return errors.New("could not find task to edit")
 }
