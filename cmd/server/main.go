@@ -1,4 +1,4 @@
-package server
+package main
 
 import (
 	"challange/internal/api"
@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func Main() {
+func main() {
 	db := repository.NewDatabase()
 	server := api.NewServer(db)
 	log.Fatal(http.ListenAndServe(":9090", server))
