@@ -1,4 +1,4 @@
-package internal
+package repository
 
 type repository interface {
 	getAllTasks() ([]task, error)
