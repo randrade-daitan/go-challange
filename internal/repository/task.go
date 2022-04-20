@@ -5,3 +5,7 @@ type Task struct {
 	Name      string
 	Completed bool
 }
+
+func (Task) TableName() string {
+	return "task"
+}

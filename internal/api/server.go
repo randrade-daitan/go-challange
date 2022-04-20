@@ -121,8 +121,8 @@ func (server *Server) createNewTask(w http.ResponseWriter, r *http.Request) {
 
 func (server *Server) updateTaskById(id int64, w http.ResponseWriter, r *http.Request) {
 	var t repository.Task
-	decoreErr := json.NewDecoder(r.Body).Decode(&t)
-	if handleError(decoreErr, w, http.StatusBadRequest) {
+	decodeErr := json.NewDecoder(r.Body).Decode(&t)
+	if handleError(decodeErr, w, http.StatusBadRequest) {
 		return
 	}
 
