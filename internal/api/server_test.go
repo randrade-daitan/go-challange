@@ -8,8 +8,11 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
+
+const testToken = "844yJt6q4tiJ2nqJXpso"
 
 func TestGetOperations(t *testing.T) {
 	tasks := []repository.Task{
@@ -97,13 +100,29 @@ func TestPutOperations(t *testing.T) {
 	})
 }
 
+func TestAuthorizationTokenOperations(t *testing.T) {
+	tasks := []repository.Task{}
+	server, _ := newTestServer(tasks)
+
+	t.Run("checks for auth token", func(t *testing.T) {
+		r, _ := http.NewRequest(http.MethodGet, "/tasks", nil)
+		r.Header.Add(authorizationKey, "Bearer aaaaaa")
+		performRequest(server, r, t, http.StatusUnauthorized)
+	})
+}
+
 func newTestServer(tasks []repository.Task) (Api, repository.Repository) {
+	os.Setenv("BEARER_TOKEN", testToken)
 	db := repository.NewMockDatabase(tasks, nil)
 	return NewServer(db), db
 }
 
 func performRequest(server Api, r *http.Request, t *testing.T, expectingCode int) *httptest.ResponseRecorder {
 	response := httptest.NewRecorder()
+
+	if r.Header.Get(authorizationKey) == "" {
+		r.Header.Add(authorizationKey, "Bearer "+testToken)
+	}
 
 	server.ServeHTTP(response, r)
 	assertStatus(t, response.Code, expectingCode)

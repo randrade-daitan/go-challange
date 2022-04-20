@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 )
+
+const authorizationKey = "Authorization"
 
 var validPath = regexp.MustCompile("^/(tasks)/([0-9]+)$")
 
@@ -22,12 +25,26 @@ func NewServer(db repository.Repository) Api {
 	server.database = db
 
 	router := http.NewServeMux()
-	router.Handle("/tasks", http.HandlerFunc(server.handleTasks))
-	router.Handle("/tasks/", http.HandlerFunc(server.handleTask))
+	router.Handle("/tasks", authenticatedHandler(server.handleTasks))
+	router.Handle("/tasks/", authenticatedHandler(server.handleTask))
 
 	server.Handler = router
 
 	return server
+}
+
+func authenticatedHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		auth := r.Header.Get(authorizationKey)
+		token := "Bearer " + os.Getenv("BEARER_TOKEN")
+
+		if auth != token {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		fn(w, r)
+	}
 }
 
 func (server *Server) handleTasks(w http.ResponseWriter, r *http.Request) {

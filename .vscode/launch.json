@@ -12,7 +12,8 @@
             "program": "${workspaceFolder}/cmd/server",
             "env": {
                 "DBUSER": "username",
-                "DBPASS": "password"
+                "DBPASS": "password",
+                "BEARER_TOKEN": "token"
             }
         }
     ]
