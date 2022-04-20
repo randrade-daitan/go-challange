@@ -22,36 +22,21 @@ func TestGetOperations(t *testing.T) {
 	server, _ := newTestServer(tasks)
 
 	t.Run("serve all tasks", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/tasks", nil)
-		response := performFetchRequest(server, request, t)
-
-		var got []repository.Task
-		parseResponse(t, response, &got)
-
+		got := performGetTasksRequest(server, t)
 		if len(got) != len(tasks) {
 			t.Errorf("did not get correct tasks count")
 		}
 	})
 
 	t.Run("serve completed tasks", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/tasks?completed=true", nil)
-		response := performFetchRequest(server, request, t)
-
-		var got []repository.Task
-		parseResponse(t, response, &got)
-
+		got := performGetTasksByCompletionRequest(true, server, t)
 		if len(got) != 3 {
 			t.Errorf("did not get correct completed tasks count")
 		}
 	})
 
 	t.Run("serve incompleted tasks", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/tasks?completed=false", nil)
-		response := performFetchRequest(server, request, t)
-
-		var got []repository.Task
-		parseResponse(t, response, &got)
-
+		got := performGetTasksByCompletionRequest(false, server, t)
 		if len(got) != 2 {
 			t.Errorf("did not get correct completed tasks count")
 		}
@@ -59,12 +44,7 @@ func TestGetOperations(t *testing.T) {
 
 	t.Run("serve task by id", func(t *testing.T) {
 		id := int64(1)
-		request, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/tasks/%v", id), nil)
-		response := performFetchRequest(server, request, t)
-
-		var got repository.Task
-		parseResponse(t, response, &got)
-
+		got := performGetTasksByIdRequest(id, server, t)
 		if got.ID != id || got.Name != "b" {
 			t.Errorf("did not get correct task by id")
 		}
@@ -88,9 +68,7 @@ func TestPostOperations(t *testing.T) {
 	server, _ := newTestServer(tasks)
 
 	t.Run("serve add task", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodPost, "/tasks", nil)
-		response := performRequest(server, request, t, http.StatusOK)
-
+		response := performAddTaskRequest(server, t)
 		if response.Body.String() != "1" {
 			t.Errorf("did not get correct completed tasks count")
 		}
@@ -104,20 +82,16 @@ func TestPutOperations(t *testing.T) {
 	server, db := newTestServer(tasks)
 
 	t.Run("serve add task", func(t *testing.T) {
-		var editedId int64 = 6
-		baseTask := repository.Task{
-			ID:        0,
+		task := repository.Task{
+			ID:        6,
 			Name:      "Edited",
 			Completed: true,
 		}
+		performUpdateTaskRequest(task, server, t)
 
-		body, _ := json.Marshal(baseTask)
-		request, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/tasks/%v", editedId), bytes.NewBuffer(body))
-		performRequest(server, request, t, http.StatusOK)
-
-		editedTask, _ := db.GetTaskByID(editedId)
-		if editedTask.Name != baseTask.Name ||
-			editedTask.Completed != baseTask.Completed {
+		editedTask, _ := db.GetTaskByID(task.ID)
+		if editedTask.Name != task.Name ||
+			editedTask.Completed != task.Completed {
 			t.Errorf("did not get edited task correctly")
 		}
 	})
@@ -137,10 +111,37 @@ func performRequest(server Api, r *http.Request, t *testing.T, expectingCode int
 	return response
 }
 
-func performFetchRequest(server Api, r *http.Request, t *testing.T) *bytes.Buffer {
+func performFetchRequest[T any](path string, got *T, server Api, t *testing.T) {
+	r, _ := http.NewRequest(http.MethodGet, path, nil)
 	response := performRequest(server, r, t, http.StatusOK)
 	assertContentType(t, response, jsonContentType)
-	return response.Body
+	parseResponse(t, response.Body, &got)
+}
+
+func performGetTasksRequest(server Api, t *testing.T) (got []repository.Task) {
+	performFetchRequest("/tasks", &got, server, t)
+	return
+}
+
+func performGetTasksByIdRequest(id int64, server Api, t *testing.T) (got repository.Task) {
+	performFetchRequest(fmt.Sprintf("/tasks/%v", id), &got, server, t)
+	return
+}
+
+func performGetTasksByCompletionRequest(completion bool, server Api, t *testing.T) (got []repository.Task) {
+	performFetchRequest(fmt.Sprintf("/tasks?completed=%v", completion), &got, server, t)
+	return
+}
+
+func performAddTaskRequest(server Api, t *testing.T) *httptest.ResponseRecorder {
+	request, _ := http.NewRequest(http.MethodPost, "/tasks", nil)
+	return performRequest(server, request, t, http.StatusOK)
+}
+
+func performUpdateTaskRequest(task repository.Task, server Api, t *testing.T) {
+	body, _ := json.Marshal(task)
+	request, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/tasks/%v", task.ID), bytes.NewBuffer(body))
+	performRequest(server, request, t, http.StatusOK)
 }
 
 func assertStatus(t testing.TB, got, want int) {
