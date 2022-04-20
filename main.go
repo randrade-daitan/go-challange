@@ -1,6 +1,7 @@
 package main
 
 import (
+	"challange/cmd/server"
 	"challange/internal/repository"
 	"fmt"
 )
@@ -34,4 +35,6 @@ func main() {
 
 	completedTasks, _ := repo.GetTasksByCompletion(true)
 	fmt.Printf("Already done %v tasks!.\n", len(completedTasks))
+
+	server.Main()
 }
