@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -25,12 +25,12 @@ func TestOrmDSN(t *testing.T) {
 
 func TestGetAllTasks(t *testing.T) {
 	repo := repository.RepositoryForTesting(testableOrm, t)
-	repo.TestRepositoryGetTasks("SELECT * FROM \"task\"", t)
+	repo.TestRepositoryGetTasks("SELECT * FROM `task`", t)
 }
 
 func TestGetTaskByID(t *testing.T) {
 	repo := repository.RepositoryForTesting(testableOrm, t)
-	repo.TestRepositoryGetTaskById("SELECT * FROM \"task\" WHERE id = $1 ORDER BY \"task\".\"id\" LIMIT 1", t)
+	repo.TestRepositoryGetTaskById("SELECT * FROM `task` WHERE id = ? ORDER BY `task`.`id` LIMIT 1", t)
 }
 
 func TestAddTask(t *testing.T) {
@@ -41,12 +41,11 @@ func TestAddTask(t *testing.T) {
 	}
 	repo := repository.RepositoryForTesting(testableOrm, t)
 
-	repo.Mock.MatchExpectationsInOrder(false)
 	repo.Mock.ExpectBegin()
 	repo.Mock.
-		ExpectQuery("INSERT INTO \"task\" (\"name\",\"completed\",\"id\") VALUES ($1,$2,$3) RETURNING \"id\"").
+		ExpectExec("INSERT INTO `task` (`name`,`completed`,`id`) VALUES (?,?,?)").
 		WithArgs(task.Name, task.Completed, task.ID).
-		WillReturnRows(repo.Mock.NewRows([]string{"id"}).AddRow(task.ID))
+		WillReturnResult(sqlmock.NewResult(task.ID, 1))
 	repo.Mock.ExpectCommit()
 
 	repo.TestRepositoryAddTask(task, t)
@@ -62,7 +61,7 @@ func TestEditTask(t *testing.T) {
 
 	repo.Mock.ExpectBegin()
 	repo.Mock.
-		ExpectExec("UPDATE \"task\" SET \"name\"=$1,\"completed\"=$2 WHERE \"id\" = $3").
+		ExpectExec("UPDATE `task` SET `name`=?,`completed`=? WHERE `id` = ?").
 		WithArgs(task.Name, task.Completed, task.ID).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 	repo.Mock.ExpectCommit()
@@ -71,7 +70,7 @@ func TestEditTask(t *testing.T) {
 }
 
 func TestGetTasksByCompletion(t *testing.T) {
-	q := "SELECT * FROM \"task\" WHERE completed = $1"
+	q := "SELECT * FROM `task` WHERE completed = ?"
 
 	t.Run("fetch completed tasks", func(t *testing.T) {
 		repo := repository.RepositoryForTesting(testableOrm, t)
@@ -87,11 +86,10 @@ func TestGetTasksByCompletion(t *testing.T) {
 func testableOrm(db *sql.DB, t *testing.T) repository.Repository {
 	t.Helper()
 
-	dialector := postgres.New(postgres.Config{
-		DSN:                  "sqlmock_db_0",
-		DriverName:           "postgres",
-		Conn:                 db,
-		PreferSimpleProtocol: true,
+	dialector := mysql.New(mysql.Config{
+		DSN:                       "sqlmock_db_0",
+		Conn:                      db,
+		SkipInitializeWithVersion: true,
 	})
 	ormDB, err := gorm.Open(dialector, &gorm.Config{})
 	if err != nil {
