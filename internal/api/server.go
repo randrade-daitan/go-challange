@@ -19,7 +19,7 @@ type Server struct {
 	http.Handler
 }
 
-func NewServer(db repository.Repository) Api {
+func NewServer(db repository.Repository) *Server {
 	server := new(Server)
 
 	server.database = db
@@ -45,6 +45,10 @@ func authenticatedHandler(fn func(http.ResponseWriter, *http.Request)) http.Hand
 
 		fn(w, r)
 	}
+}
+
+func (server *Server) StartServing(port int) error {
+	return http.ListenAndServe(fmt.Sprintf(":%v", port), server)
 }
 
 func (server *Server) handleTasks(w http.ResponseWriter, r *http.Request) {

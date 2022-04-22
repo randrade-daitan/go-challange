@@ -5,7 +5,6 @@ import (
 	"challange/internal/orm"
 	"challange/internal/repository"
 	"log"
-	"net/http"
 	"os"
 )
 
@@ -22,5 +21,5 @@ func main() {
 	}
 
 	server := api.NewServer(db)
-	log.Fatal(http.ListenAndServe(":9090", server))
+	log.Fatal(server.StartServing(9090))
 }
