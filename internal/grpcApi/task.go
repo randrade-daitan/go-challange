@@ -1,8 +1,11 @@
 package grpcApi
 
-import "challange/internal/repository"
+import (
+	"challange/internal/grpcApi/proto"
+	"challange/internal/repository"
+)
 
-func convertDataTask(t *Task) repository.Task {
+func convertDataTask(t *proto.Task) repository.Task {
 	return repository.Task{
 		ID:        t.Id,
 		Name:      t.Name,
@@ -10,21 +13,21 @@ func convertDataTask(t *Task) repository.Task {
 	}
 }
 
-func convertRepoTask(t repository.Task) *Task {
-	return &Task{
+func convertRepoTask(t repository.Task) *proto.Task {
+	return &proto.Task{
 		Id:        t.ID,
 		Name:      t.Name,
 		Completed: t.Completed,
 	}
 }
 
-func convertRepoTasks(t []repository.Task) *Tasks {
-	var tasks []*Task
+func convertRepoTasks(t []repository.Task) *proto.Tasks {
+	var tasks []*proto.Task
 	for _, rt := range t {
 		newTask := convertRepoTask(rt)
 		tasks = append(tasks, newTask)
 	}
-	return &Tasks{
+	return &proto.Tasks{
 		Task: tasks,
 	}
 }
