@@ -9,17 +9,17 @@ import (
 )
 
 func main() {
-	var db repository.Repository
+	var repo repository.Repository
 
 	switch os.Getenv("DB_IMPL") {
 	case "vanilla":
-		db = repository.NewDatabase()
+		repo = repository.NewDatabase()
 	case "orm":
-		db = orm.NewOrm()
+		repo = orm.NewOrm()
 	default:
 		log.Fatal("could not init the database")
 	}
 
-	server := api.NewServer(db)
+	server := api.NewServer(repo)
 	log.Fatal(server.StartServing(9090))
 }

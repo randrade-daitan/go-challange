@@ -15,15 +15,15 @@ import (
 )
 
 type gRPCServer struct {
-	db      repository.Repository
+	repo    repository.Repository
 	service *grpc.Server
 	proto.UnimplementedTaskServiceServer
 }
 
-func NewServer(db repository.Repository) *gRPCServer {
+func NewServer(repo repository.Repository) *gRPCServer {
 	service := grpc.NewServer()
 	server := new(gRPCServer)
-	server.db = db
+	server.repo = repo
 	server.service = service
 	return server
 }
@@ -74,49 +74,49 @@ func (server *gRPCServer) serveHTTPProxy(port int) error {
 }
 
 func (server *gRPCServer) GetTasks(ctx context.Context, in *proto.Empty) (*proto.Tasks, error) {
-	t, err := server.db.GetAllTasks()
+	tasks, err := server.repo.GetAllTasks()
 	if err != nil {
 		return nil, err
 	}
-	return convertRepoTasks(t), nil
+	return convertRepoTasks(tasks), nil
 }
 
 func (server *gRPCServer) GetTaskByID(ctx context.Context, in *proto.TaskID) (*proto.Task, error) {
-	t, err := server.db.GetTaskByID(in.Id)
+	task, err := server.repo.GetTaskByID(in.Id)
 	if err != nil {
 		return nil, err
 	}
-	return convertRepoTask(t), nil
+	return convertRepoTask(task), nil
 }
 
 func (server *gRPCServer) GetTasksByCompletion(ctx context.Context, in *proto.TaskCompletion) (*proto.Tasks, error) {
-	c := in.Completed
-	if c == nil {
+	completed := in.Completed
+	if completed == nil {
 		return server.GetTasks(ctx, &proto.Empty{})
 	}
 
-	t, err := server.db.GetTasksByCompletion(*c)
+	tasks, err := server.repo.GetTasksByCompletion(*completed)
 	if err != nil {
 		return nil, err
 	}
-	return convertRepoTasks(t), nil
+	return convertRepoTasks(tasks), nil
 }
 
 func (server *gRPCServer) AddTask(ctx context.Context, in *proto.Task) (*proto.TaskID, error) {
 	newTask := convertDataTask(in)
-	id, err := server.db.AddTask(newTask)
+	id, err := server.repo.AddTask(newTask)
 	if err != nil {
 		return nil, err
 	}
 
-	r := &proto.TaskID{
+	result := &proto.TaskID{
 		Id: id,
 	}
-	return r, nil
+	return result, nil
 }
 
 func (server *gRPCServer) EditTask(ctx context.Context, in *proto.Task) (*proto.Empty, error) {
 	newTask := convertDataTask(in)
-	err := server.db.EditTask(newTask)
+	err := server.repo.EditTask(newTask)
 	return &proto.Empty{}, err
 }

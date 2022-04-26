@@ -15,14 +15,14 @@ const authorizationKey = "Authorization"
 var validPath = regexp.MustCompile("^/(tasks)/([0-9]+)$")
 
 type Server struct {
-	database repository.Repository
+	repo repository.Repository
 	http.Handler
 }
 
-func NewServer(db repository.Repository) *Server {
+func NewServer(repo repository.Repository) *Server {
 	server := new(Server)
 
-	server.database = db
+	server.repo = repo
 
 	router := http.NewServeMux()
 	router.Handle("/tasks", authenticatedHandler(server.handleTasks))
@@ -61,14 +61,14 @@ func (server *Server) handleTasks(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) handleTask(w http.ResponseWriter, r *http.Request) {
-	m := validPath.FindStringSubmatch(r.URL.Path)
-	if m == nil || len(m) < 3 {
+	matches := validPath.FindStringSubmatch(r.URL.Path)
+	if matches == nil || len(matches) < 3 {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	i, e := strconv.Atoi(m[2])
-	if handleError(e, w, http.StatusNotFound) {
+	i, err := strconv.Atoi(matches[2])
+	if handleError(err, w, http.StatusNotFound) {
 		return
 	}
 
@@ -91,32 +91,32 @@ func (server *Server) handleGetTasks(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) getAllTasks(w http.ResponseWriter, r *http.Request) {
-	t, e := server.database.GetAllTasks()
+	t, e := server.repo.GetAllTasks()
 	handleResponse(t, e, w)
 }
 
 func (server *Server) getTasksByCompletion(isCompleted string, w http.ResponseWriter, r *http.Request) {
-	c, err := strconv.ParseBool(isCompleted)
+	completed, err := strconv.ParseBool(isCompleted)
 	if handleError(err, w, http.StatusBadRequest) {
 		return
 	}
 
-	t, e := server.database.GetTasksByCompletion(c)
+	t, e := server.repo.GetTasksByCompletion(completed)
 	handleResponse(t, e, w)
 }
 
 func (server *Server) getTaskById(id int64, w http.ResponseWriter, r *http.Request) {
-	t, e := server.database.GetTaskByID(id)
+	t, e := server.repo.GetTaskByID(id)
 	handleResponse(t, e, w)
 }
 
 func (server *Server) createNewTask(w http.ResponseWriter, r *http.Request) {
-	t := repository.Task{
+	task := repository.Task{
 		ID:        0,
 		Name:      "",
 		Completed: false,
 	}
-	id, e := server.database.AddTask(t)
+	id, e := server.repo.AddTask(task)
 	if handleError(e, w, http.StatusInternalServerError) {
 		return
 	}
@@ -124,14 +124,14 @@ func (server *Server) createNewTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) updateTaskById(id int64, w http.ResponseWriter, r *http.Request) {
-	var t repository.Task
-	decodeErr := json.NewDecoder(r.Body).Decode(&t)
+	var task repository.Task
+	decodeErr := json.NewDecoder(r.Body).Decode(&task)
 	if handleError(decodeErr, w, http.StatusBadRequest) {
 		return
 	}
 
-	t.ID = id
-	editErr := server.database.EditTask(t)
+	task.ID = id
+	editErr := server.repo.EditTask(task)
 	if handleError(editErr, w, http.StatusInternalServerError) {
 		return
 	}
@@ -139,8 +139,8 @@ func (server *Server) updateTaskById(id int64, w http.ResponseWriter, r *http.Re
 	w.WriteHeader(http.StatusOK)
 }
 
-func handleResponse(r any, e error, w http.ResponseWriter) {
-	if handleError(e, w, http.StatusInternalServerError) {
+func handleResponse(r any, err error, w http.ResponseWriter) {
+	if handleError(err, w, http.StatusInternalServerError) {
 		return
 	}
 	w.Header().Set("content-type", jsonContentType)

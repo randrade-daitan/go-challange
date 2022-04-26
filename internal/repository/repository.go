@@ -5,6 +5,6 @@ type Repository interface {
 	GetTaskByID(id int64) (Task, error)
 	GetTasksByCompletion(isCompleted bool) ([]Task, error)
 
-	AddTask(t Task) (int64, error)
-	EditTask(t Task) error
+	AddTask(task Task) (int64, error)
+	EditTask(task Task) error
 }

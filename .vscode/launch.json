@@ -13,6 +13,8 @@
             "env": {
                 "DBUSER": "username",
                 "DBPASS": "password",
+                "DBNAME": "name",
+                "DBURL": "url",
                 "BEARER_TOKEN": "token",
                 "DB_IMPL": "vanilla | orm"
             }

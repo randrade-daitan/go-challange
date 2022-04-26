@@ -34,33 +34,33 @@ func NewOrm() repository.Repository {
 
 func dbDSN() string {
 	auth := repository.DBUser() + ":" + repository.DBPass() + "@"
-	url := repository.DBProtocol + "(" + repository.DBURL + ")/"
-	name := repository.DBName
+	url := repository.DBProtocol + "(" + repository.DBURL() + ")/"
+	name := repository.DBName()
 	return auth + url + name + "?charset=utf8&parseTime=True&loc=Local"
 }
 
-func (db Orm) GetAllTasks() (t []repository.Task, err error) {
-	err = db.Find(&t).Error
+func (repo Orm) GetAllTasks() (tasks []repository.Task, err error) {
+	err = repo.Find(&tasks).Error
 	return
 }
 
-func (db Orm) GetTaskByID(id int64) (t repository.Task, err error) {
-	err = db.Where("id = ?", id).First(&t).Error
+func (repo Orm) GetTaskByID(id int64) (task repository.Task, err error) {
+	err = repo.Where("id = ?", id).First(&task).Error
 	return
 }
 
-func (db Orm) GetTasksByCompletion(isCompleted bool) (t []repository.Task, err error) {
-	err = db.Where("completed = ?", isCompleted).Find(&t).Error
+func (repo Orm) GetTasksByCompletion(isCompleted bool) (tasks []repository.Task, err error) {
+	err = repo.Where("completed = ?", isCompleted).Find(&tasks).Error
 	return
 }
 
-func (db Orm) AddTask(t repository.Task) (id int64, err error) {
-	err = db.Create(&t).Error
-	id = t.ID
+func (repo Orm) AddTask(task repository.Task) (id int64, err error) {
+	err = repo.Create(&task).Error
+	id = task.ID
 	return
 }
 
-func (db Orm) EditTask(t repository.Task) (err error) {
-	err = db.Save(&t).Error
+func (repo Orm) EditTask(task repository.Task) (err error) {
+	err = repo.Save(&task).Error
 	return
 }

@@ -17,8 +17,8 @@ func NewDatabase() Repository {
 		User:   DBUser(),
 		Passwd: DBPass(),
 		Net:    DBProtocol,
-		Addr:   DBURL,
-		DBName: DBName,
+		Addr:   DBURL(),
+		DBName: DBName(),
 	}
 
 	db, err := sql.Open("mysql", cfg.FormatDSN())
