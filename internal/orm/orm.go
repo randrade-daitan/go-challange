@@ -12,7 +12,8 @@ type Orm struct {
 	*gorm.DB
 }
 
-func NewOrm() repository.Repository {
+// Creates a new repository using the ORM implementation.
+func NewRepository() repository.Repository {
 	var datetimePrecision = 2
 
 	db, err := gorm.Open(mysql.New(mysql.Config{

@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	repo := repository.NewDatabase()
+	repo := repository.NewRepository()
 	server := grpcApi.NewServer(repo)
 	log.Fatal(server.StartServing(9091))
 }

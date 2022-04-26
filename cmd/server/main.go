@@ -13,9 +13,9 @@ func main() {
 
 	switch os.Getenv("DB_IMPL") {
 	case "vanilla":
-		repo = repository.NewDatabase()
+		repo = repository.NewRepository()
 	case "orm":
-		repo = orm.NewOrm()
+		repo = orm.NewRepository()
 	default:
 		log.Fatal("could not init the database")
 	}

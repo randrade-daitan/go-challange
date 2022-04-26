@@ -12,7 +12,8 @@ type Database struct {
 	*sql.DB
 }
 
-func NewDatabase() Repository {
+// Creates a new repository using the vanilla implementation.
+func NewRepository() Repository {
 	cfg := mysql.Config{
 		User:   DBUser(),
 		Passwd: DBPass(),
