@@ -20,15 +20,18 @@ type restServer struct {
 }
 
 // Creates a new REST server.
-func NewServer(repo repository.Repository) *restServer {
-	server := new(restServer)
+func NewServer(repo repository.Repository) Api {
+	return newServer(repo)
+}
 
-	server.repo = repo
+func newServer(repo repository.Repository) *restServer {
+	server := new(restServer)
 
 	router := http.NewServeMux()
 	router.Handle("/tasks", authenticatedHandler(server.handleTasks))
 	router.Handle("/tasks/", authenticatedHandler(server.handleTask))
 
+	server.repo = repo
 	server.Handler = router
 
 	return server

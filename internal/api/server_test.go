@@ -114,7 +114,7 @@ func TestAuthorizationTokenOperations(t *testing.T) {
 func newTestServer(tasks []repository.Task) (server *restServer, repo repository.Repository) {
 	os.Setenv("BEARER_TOKEN", testToken)
 	repo = repository.NewMockDatabase(tasks, nil)
-	server = NewServer(repo)
+	server = newServer(repo)
 	return
 }
 
