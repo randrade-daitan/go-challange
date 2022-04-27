@@ -14,9 +14,11 @@ import (
 func TestOrmDSN(t *testing.T) {
 	os.Setenv("DBUSER", "aaa")
 	os.Setenv("DBPASS", "bbb")
+	os.Setenv("DBNAME", "ormtest")
+	os.Setenv("DBURL", "testurl:testport")
 
 	dsn := dbDSN()
-	expectedDSN := "aaa:bbb@tcp(127.0.0.1:3306)/challange?charset=utf8&parseTime=True&loc=Local"
+	expectedDSN := "aaa:bbb@tcp(testurl:testport)/ormtest?charset=utf8&parseTime=True&loc=Local"
 
 	if dsn != expectedDSN {
 		t.Errorf("orm dsn is incorrect")
