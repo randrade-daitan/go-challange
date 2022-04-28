@@ -49,7 +49,7 @@ func TestGetTasksByCompletion(t *testing.T) {
 		repo.TestRepositoryGetTasksByCompletion(q, t, true)
 	})
 
-	t.Run("fetch incompleted tasks", func(t *testing.T) {
+	t.Run("fetch uncompleted tasks", func(t *testing.T) {
 		repo := RepositoryForTesting(testableDatabase, t)
 		repo.TestRepositoryGetTasksByCompletion(q, t, false)
 	})
