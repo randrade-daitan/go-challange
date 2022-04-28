@@ -36,13 +36,13 @@ func RepositoryForTesting(fc func(*sql.DB, *testing.T) Repository, t *testing.T)
 	}
 }
 
-func (tr TestableRepository) TestRepositoryGetTasks(q string, t *testing.T) {
+func (tr TestableRepository) TestRepositoryGetTasks(query string, t *testing.T) {
 	t.Helper()
 	defer tr.db.Close()
 
 	rowCount := addRandomRows(tr.Rows, Task{0, "", true})
 	tr.Mock.
-		ExpectQuery(q).
+		ExpectQuery(query).
 		WillReturnRows(tr.Rows)
 
 	tasks, err := tr.Repo.GetAllTasks()
@@ -55,13 +55,13 @@ func (tr TestableRepository) TestRepositoryGetTasks(q string, t *testing.T) {
 	}
 }
 
-func (tr TestableRepository) TestRepositoryGetTaskById(q string, t *testing.T) {
+func (tr TestableRepository) TestRepositoryGetTaskById(query string, t *testing.T) {
 	t.Helper()
 	defer tr.db.Close()
 
 	tr.Rows.AddRow(15, "task", false)
 	tr.Mock.
-		ExpectQuery(q).
+		ExpectQuery(query).
 		WillReturnRows(tr.Rows)
 
 	task, err := tr.Repo.GetTaskByID(15)
@@ -74,13 +74,13 @@ func (tr TestableRepository) TestRepositoryGetTaskById(q string, t *testing.T) {
 	}
 }
 
-func (tr TestableRepository) TestRepositoryGetTasksByCompletion(q string, t *testing.T, isCompleted bool) {
+func (tr TestableRepository) TestRepositoryGetTasksByCompletion(query string, t *testing.T, isCompleted bool) {
 	t.Helper()
 	defer tr.db.Close()
 
 	rowCount := addRandomRows(tr.Rows, Task{0, "", isCompleted})
 	tr.Mock.
-		ExpectQuery(q).
+		ExpectQuery(query).
 		WithArgs(isCompleted).
 		WillReturnRows(tr.Rows)
 
