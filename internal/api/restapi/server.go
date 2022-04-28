@@ -1,6 +1,7 @@
-package api
+package restapi
 
 import (
+	"challange/internal/api"
 	"challange/internal/repository"
 	"encoding/json"
 	"fmt"
@@ -20,7 +21,7 @@ type restServer struct {
 }
 
 // Creates a new REST server.
-func NewServer(repo repository.Repository) Api {
+func NewServer(repo repository.Repository) api.Api {
 	return newServer(repo)
 }
 

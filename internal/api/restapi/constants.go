@@ -1,3 +1,3 @@
-package api
+package restapi
 
 const jsonContentType = "application/json"

@@ -2,11 +2,12 @@ package main
 
 import (
 	"challange/internal/repository"
+	"challange/internal/repository/mysqlrepo"
 	"fmt"
 )
 
 func main() {
-	repo := repository.NewRepository()
+	repo := mysqlrepo.NewRepository()
 
 	allTasks, _ := repo.GetAllTasks()
 	for _, t := range allTasks {

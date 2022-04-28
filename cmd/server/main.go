@@ -1,9 +1,10 @@
 package main
 
 import (
-	"challange/internal/api"
-	"challange/internal/orm"
+	"challange/internal/api/restapi"
 	"challange/internal/repository"
+	"challange/internal/repository/mysqlrepo"
+	"challange/internal/repository/ormrepo"
 	"log"
 	"os"
 )
@@ -13,13 +14,13 @@ func main() {
 
 	switch os.Getenv("DB_IMPL") {
 	case "vanilla":
-		repo = repository.NewRepository()
+		repo = mysqlrepo.NewRepository()
 	case "orm":
-		repo = orm.NewRepository()
+		repo = ormrepo.NewRepository()
 	default:
 		log.Fatal("could not init the database")
 	}
 
-	server := api.NewServer(repo)
+	server := restapi.NewServer(repo)
 	log.Fatal(server.StartServing(9090))
 }

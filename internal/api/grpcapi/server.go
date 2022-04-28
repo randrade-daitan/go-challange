@@ -1,7 +1,7 @@
-package grpcApi
+package grpcapi
 
 import (
-	"challange/internal/grpcApi/proto"
+	"challange/internal/api/grpcapi/proto"
 	"challange/internal/repository"
 	"context"
 	"fmt"

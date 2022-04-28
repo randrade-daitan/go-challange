@@ -1,4 +1,4 @@
-package api
+package restapi
 
 import (
 	"challange/internal/repository"
