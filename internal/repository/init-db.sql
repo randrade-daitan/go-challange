@@ -1,3 +1,6 @@
+CREATE DATABASE IF NOT EXISTS challenge;
+USE challenge;
+
 DROP TABLE IF EXISTS task;
 CREATE TABLE task (
   id         INT AUTO_INCREMENT NOT NULL,

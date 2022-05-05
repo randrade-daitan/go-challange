@@ -1,0 +1,43 @@
+version: '3'
+services:
+  server:
+    container_name: challenge-server
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "9991:9091"
+      - "9992:9092"
+    environment:
+      - DBUSER=docker
+      - DBPASS=password
+      - DBNAME=challenge
+      - DBURL=db:3306
+      - BEARER_TOKEN=token
+      - DB_IMPL=vanilla
+    networks:
+      - challenge-network
+
+  db:
+    container_name: challenge-db
+    image: mysql:latest
+    restart: unless-stopped
+    command: --init-file /app/internal/repository/init-db.sql
+    environment:
+      - MYSQL_USER=docker
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=challenge
+      - MYSQL_ROOT_PASSWORD=password
+    volumes:
+      - ".:/app"
+      - db-data:/var/lib/mysql
+    networks:
+      - challenge-network
+
+volumes:
+  db-data:
+
+networks:
+  challenge-network:
+    driver: "bridge"
