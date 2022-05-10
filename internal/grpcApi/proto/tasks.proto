@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "internal/grpcApi/proto";
+
+import "google/api/annotations.proto";
+
+message Empty {}
+
+message Task {
+    int64 id = 1;
+    string name = 2;
+    bool completed = 3;
+}
+
+message Tasks {
+    repeated Task task = 1;
+}
+
+message TaskID {
+    int64 id = 1;
+}
+
+message TaskCompletion {
+    optional bool completed = 1;
+}
+
+service TaskService {
+    rpc GetTasks(Empty) returns (Tasks) {
+        // Managed by GetTasksByCompletion
+    };
+
+    rpc GetTaskByID(TaskID) returns (Task) {
+        option (google.api.http) = {
+            get: "/tasks/{id}"
+        };
+    };
+
+    rpc GetTasksByCompletion(TaskCompletion) returns (Tasks) {
+        option (google.api.http) = {
+            get: "/tasks"
+        };
+    };
+
+    rpc AddTask(Task) returns (TaskID) {
+        option (google.api.http) = {
+            post: "/tasks"
+            body: "*"
+        };
+    };
+
+    rpc EditTask(Task) returns (Empty) {
+        option (google.api.http) = {
+            put: "/tasks/{id}"
+            body: "*"
+        };
+    };
+}
