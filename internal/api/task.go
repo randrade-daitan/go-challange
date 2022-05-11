@@ -1,7 +1,7 @@
 package api
 
 import (
-	"challange/internal/api/proto"
+	"challange/internal/proto"
 	"challange/internal/repository"
 )
 

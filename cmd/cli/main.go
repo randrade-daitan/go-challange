@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	repo := repository.NewRepository()
+	repo := repository.NewMySqlRepository()
 
 	allTasks, _ := repo.GetAllTasks()
 	for _, t := range allTasks {
