@@ -1,4 +1,4 @@
-package restapi
+package api
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ import (
 
 const testToken = "844yJt6q4tiJ2nqJXpso"
 
-func TestGetOperations(t *testing.T) {
+func TestRestGetOperations(t *testing.T) {
 	tasks := []repository.Task{
 		{ID: 0, Name: "a", Completed: true},
 		{ID: 1, Name: "b", Completed: false},
@@ -64,7 +64,7 @@ func TestGetOperations(t *testing.T) {
 	})
 }
 
-func TestPostOperations(t *testing.T) {
+func TestRestPostOperations(t *testing.T) {
 	tasks := []repository.Task{
 		{ID: 0, Name: "", Completed: false},
 	}
@@ -78,7 +78,7 @@ func TestPostOperations(t *testing.T) {
 	})
 }
 
-func TestPutOperations(t *testing.T) {
+func TestRestPutOperations(t *testing.T) {
 	tasks := []repository.Task{
 		{ID: 6, Name: "test", Completed: false},
 	}
@@ -100,7 +100,7 @@ func TestPutOperations(t *testing.T) {
 	})
 }
 
-func TestAuthorizationTokenOperations(t *testing.T) {
+func TestRestAuthorizationTokenOperations(t *testing.T) {
 	tasks := []repository.Task{}
 	server, _ := newTestServer(tasks)
 
@@ -114,7 +114,7 @@ func TestAuthorizationTokenOperations(t *testing.T) {
 func newTestServer(tasks []repository.Task) (server *restServer, repo repository.Repository) {
 	os.Setenv("BEARER_TOKEN", testToken)
 	repo = repository.NewMockDatabase(tasks, nil)
-	server = newServer(repo)
+	server = newRestServer(repo)
 	return
 }
 

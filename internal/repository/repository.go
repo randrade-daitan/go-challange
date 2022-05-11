@@ -1,10 +1,5 @@
 package repository
 
-import (
-	"log"
-	"os"
-)
-
 // A storage for tasks
 type Repository interface {
 
@@ -23,16 +18,4 @@ type Repository interface {
 
 	// Edits a task from the value passed through the task parameter.
 	EditTask(task Task) error
-}
-
-func NewRepository() (repo Repository) {
-	switch os.Getenv("DB_IMPL") {
-	case "vanilla":
-		repo = newMySqlRepository()
-	case "orm":
-		repo = newOrmRepository()
-	default:
-		log.Fatal("could not init the database")
-	}
-	return
 }

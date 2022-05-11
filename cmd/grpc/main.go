@@ -1,13 +1,13 @@
 package main
 
 import (
-	"challange/internal/api/grpcapi"
+	"challange/internal/api"
 	"challange/internal/repository"
 	"log"
 )
 
 func main() {
-	repo := repository.NewRepository()
-	server := grpcapi.NewServer(repo)
+	repo := repository.NewMySqlRepository()
+	server := api.NewGrpcServer(repo)
 	log.Fatal(server.StartServing(9091))
 }

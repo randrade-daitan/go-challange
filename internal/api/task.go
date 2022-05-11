@@ -1,7 +1,7 @@
-package grpcapi
+package api
 
 import (
-	"challange/internal/api/grpcapi/proto"
+	"challange/internal/api/proto"
 	"challange/internal/repository"
 )
 

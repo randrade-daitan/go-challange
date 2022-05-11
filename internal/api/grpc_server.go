@@ -1,7 +1,7 @@
-package grpcapi
+package api
 
 import (
-	"challange/internal/api/grpcapi/proto"
+	"challange/internal/api/proto"
 	"challange/internal/repository"
 	"context"
 	"fmt"
@@ -21,7 +21,7 @@ type grpcServer struct {
 }
 
 // Creates a new gRPC/REST combo server.
-func NewServer(repo repository.Repository) *grpcServer {
+func NewGrpcServer(repo repository.Repository) *grpcServer {
 	service := grpc.NewServer()
 	server := new(grpcServer)
 	server.repo = repo
