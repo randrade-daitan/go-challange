@@ -1,7 +1,6 @@
-package ormrepo
+package repository
 
 import (
-	"challange/internal/repository"
 	"log"
 
 	"gorm.io/driver/mysql"
@@ -12,8 +11,7 @@ type Orm struct {
 	*gorm.DB
 }
 
-// Creates a new repository using the ORM implementation.
-func NewRepository() repository.Repository {
+func newOrmRepository() Repository {
 	var datetimePrecision = 2
 
 	db, err := gorm.Open(mysql.New(mysql.Config{
@@ -34,34 +32,34 @@ func NewRepository() repository.Repository {
 }
 
 func dbDSN() string {
-	auth := repository.DBUser() + ":" + repository.DBPass() + "@"
-	url := repository.DBProtocol + "(" + repository.DBURL() + ")/"
-	name := repository.DBName()
+	auth := DBUser() + ":" + DBPass() + "@"
+	url := DBProtocol + "(" + DBURL() + ")/"
+	name := DBName()
 	return auth + url + name + "?charset=utf8&parseTime=True&loc=Local"
 }
 
-func (repo Orm) GetAllTasks() (tasks []repository.Task, err error) {
+func (repo Orm) GetAllTasks() (tasks []Task, err error) {
 	err = repo.Find(&tasks).Error
 	return
 }
 
-func (repo Orm) GetTaskByID(id int64) (task repository.Task, err error) {
+func (repo Orm) GetTaskByID(id int64) (task Task, err error) {
 	err = repo.Where("id = ?", id).First(&task).Error
 	return
 }
 
-func (repo Orm) GetTasksByCompletion(isCompleted bool) (tasks []repository.Task, err error) {
+func (repo Orm) GetTasksByCompletion(isCompleted bool) (tasks []Task, err error) {
 	err = repo.Where("completed = ?", isCompleted).Find(&tasks).Error
 	return
 }
 
-func (repo Orm) AddTask(task repository.Task) (id int64, err error) {
+func (repo Orm) AddTask(task Task) (id int64, err error) {
 	err = repo.Create(&task).Error
 	id = task.ID
 	return
 }
 
-func (repo Orm) EditTask(task repository.Task) (err error) {
+func (repo Orm) EditTask(task Task) (err error) {
 	err = repo.Save(&task).Error
 	return
 }

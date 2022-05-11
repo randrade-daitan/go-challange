@@ -1,26 +1,25 @@
-package mysqlrepo
+package repository
 
 import (
-	"challange/internal/repository"
 	"database/sql"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
 )
 
-func TestGetAllTasks(t *testing.T) {
-	repo := repository.RepositoryForTesting(testableDatabase, t)
+func TestMySqlGetAllTasks(t *testing.T) {
+	repo := RepositoryForTesting(testableDatabase, t)
 	repo.TestRepositoryGetTasks("SELECT * FROM task", t)
 }
 
-func TestGetTaskByID(t *testing.T) {
-	repo := repository.RepositoryForTesting(testableDatabase, t)
+func TestMySqlGetTaskByID(t *testing.T) {
+	repo := RepositoryForTesting(testableDatabase, t)
 	repo.TestRepositoryGetTaskById("SELECT * FROM task WHERE id = ?", t)
 }
 
-func TestAddTask(t *testing.T) {
-	task := repository.Task{10, "DB Test", false}
-	repo := repository.RepositoryForTesting(testableDatabase, t)
+func TestMySqlAddTask(t *testing.T) {
+	task := Task{10, "DB Test", false}
+	repo := RepositoryForTesting(testableDatabase, t)
 
 	repo.Mock.
 		ExpectExec("INSERT INTO task (name, completed) VALUES (?, ?)").
@@ -30,9 +29,9 @@ func TestAddTask(t *testing.T) {
 	repo.TestRepositoryAddTask(task, t)
 }
 
-func TestEditTask(t *testing.T) {
-	task := repository.Task{2, "edited", true}
-	repo := repository.RepositoryForTesting(testableDatabase, t)
+func TestMySqlEditTask(t *testing.T) {
+	task := Task{2, "edited", true}
+	repo := RepositoryForTesting(testableDatabase, t)
 
 	repo.Mock.
 		ExpectExec("UPDATE task SET name = ?, completed = ? WHERE id = ?").
@@ -42,21 +41,21 @@ func TestEditTask(t *testing.T) {
 	repo.TestRepositoryEditTask(task, t)
 }
 
-func TestGetTasksByCompletion(t *testing.T) {
+func TestMySqlGetTasksByCompletion(t *testing.T) {
 	q := "SELECT * FROM task WHERE completed = ?"
 
 	t.Run("fetch completed tasks", func(t *testing.T) {
-		repo := repository.RepositoryForTesting(testableDatabase, t)
+		repo := RepositoryForTesting(testableDatabase, t)
 		repo.TestRepositoryGetTasksByCompletion(q, t, true)
 	})
 
 	t.Run("fetch uncompleted tasks", func(t *testing.T) {
-		repo := repository.RepositoryForTesting(testableDatabase, t)
+		repo := RepositoryForTesting(testableDatabase, t)
 		repo.TestRepositoryGetTasksByCompletion(q, t, false)
 	})
 }
 
-func testableDatabase(db *sql.DB, t *testing.T) repository.Repository {
+func testableDatabase(db *sql.DB, t *testing.T) Repository {
 	t.Helper()
 	return &Database{db}
 }

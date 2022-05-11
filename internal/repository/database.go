@@ -1,7 +1,6 @@
-package mysqlrepo
+package repository
 
 import (
-	"challange/internal/repository"
 	"database/sql"
 	"fmt"
 	"log"
@@ -13,14 +12,13 @@ type Database struct {
 	*sql.DB
 }
 
-// Creates a new repository using the vanilla implementation.
-func NewRepository() repository.Repository {
+func newMySqlRepository() Repository {
 	cfg := mysql.Config{
-		User:   repository.DBUser(),
-		Passwd: repository.DBPass(),
-		Net:    repository.DBProtocol,
-		Addr:   repository.DBURL(),
-		DBName: repository.DBName(),
+		User:   DBUser(),
+		Passwd: DBPass(),
+		Net:    DBProtocol,
+		Addr:   DBURL(),
+		DBName: DBName(),
 	}
 
 	db, err := sql.Open("mysql", cfg.FormatDSN())
@@ -31,19 +29,19 @@ func NewRepository() repository.Repository {
 	return &Database{db}
 }
 
-func (db *Database) GetAllTasks() ([]repository.Task, error) {
+func (db *Database) GetAllTasks() ([]Task, error) {
 	return db.queryForTasks("SELECT * FROM task")
 }
 
-func (db *Database) GetTaskByID(id int64) (repository.Task, error) {
+func (db *Database) GetTaskByID(id int64) (Task, error) {
 	return db.queryRowForTask("SELECT * FROM task WHERE id = ?", id)
 }
 
-func (db *Database) GetTasksByCompletion(isCompleted bool) ([]repository.Task, error) {
+func (db *Database) GetTasksByCompletion(isCompleted bool) ([]Task, error) {
 	return db.queryForTasks("SELECT * FROM task WHERE completed = ?", isCompleted)
 }
 
-func (db *Database) AddTask(t repository.Task) (int64, error) {
+func (db *Database) AddTask(t Task) (int64, error) {
 	result, err := db.executeQuery("INSERT INTO task (name, completed) VALUES (?, ?)", t.Name, t.Completed)
 	if err != nil {
 		return 0, err
@@ -57,13 +55,13 @@ func (db *Database) AddTask(t repository.Task) (int64, error) {
 	return id, nil
 }
 
-func (db *Database) EditTask(t repository.Task) error {
+func (db *Database) EditTask(t Task) error {
 	_, err := db.executeQuery("UPDATE task SET name = ?, completed = ? WHERE id = ?", t.Name, t.Completed, t.ID)
 	return err
 }
 
-func (db *Database) queryForTasks(query string, args ...any) ([]repository.Task, error) {
-	tasks := []repository.Task{}
+func (db *Database) queryForTasks(query string, args ...any) ([]Task, error) {
+	tasks := []Task{}
 	rows, err := db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch tasks rows: %v", err)
@@ -71,7 +69,7 @@ func (db *Database) queryForTasks(query string, args ...any) ([]repository.Task,
 
 	defer rows.Close()
 	for rows.Next() {
-		var task repository.Task
+		var task Task
 		if err := rows.Scan(&task.ID, &task.Name, &task.Completed); err != nil {
 			return nil, fmt.Errorf("could not fetch tasks next row: %v", err)
 		}
@@ -84,8 +82,8 @@ func (db *Database) queryForTasks(query string, args ...any) ([]repository.Task,
 	return tasks, nil
 }
 
-func (db *Database) queryRowForTask(query string, args ...any) (repository.Task, error) {
-	var task repository.Task
+func (db *Database) queryRowForTask(query string, args ...any) (Task, error) {
+	var task Task
 
 	row := db.QueryRow(query, args...)
 	if err := row.Scan(&task.ID, &task.Name, &task.Completed); err != nil {
