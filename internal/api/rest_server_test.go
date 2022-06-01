@@ -14,7 +14,7 @@ import (
 
 const testToken = "844yJt6q4tiJ2nqJXpso"
 
-func TestGetOperations(t *testing.T) {
+func TestRestGetOperations(t *testing.T) {
 	tasks := []repository.Task{
 		{ID: 0, Name: "a", Completed: true},
 		{ID: 1, Name: "b", Completed: false},
@@ -64,7 +64,7 @@ func TestGetOperations(t *testing.T) {
 	})
 }
 
-func TestPostOperations(t *testing.T) {
+func TestRestPostOperations(t *testing.T) {
 	tasks := []repository.Task{
 		{ID: 0, Name: "", Completed: false},
 	}
@@ -78,7 +78,7 @@ func TestPostOperations(t *testing.T) {
 	})
 }
 
-func TestPutOperations(t *testing.T) {
+func TestRestPutOperations(t *testing.T) {
 	tasks := []repository.Task{
 		{ID: 6, Name: "test", Completed: false},
 	}
@@ -100,7 +100,7 @@ func TestPutOperations(t *testing.T) {
 	})
 }
 
-func TestAuthorizationTokenOperations(t *testing.T) {
+func TestRestAuthorizationTokenOperations(t *testing.T) {
 	tasks := []repository.Task{}
 	server, _ := newTestServer(tasks)
 
@@ -111,14 +111,14 @@ func TestAuthorizationTokenOperations(t *testing.T) {
 	})
 }
 
-func newTestServer(tasks []repository.Task) (server *Server, db repository.Repository) {
+func newTestServer(tasks []repository.Task) (server *restServer, repo repository.Repository) {
 	os.Setenv("BEARER_TOKEN", testToken)
-	db = repository.NewMockDatabase(tasks, nil)
-	server = NewServer(db)
+	repo = repository.NewMockDatabase(tasks, nil)
+	server = newRestServer(repo)
 	return
 }
 
-func performRequest(server *Server, r *http.Request, t *testing.T, expectingCode int) *httptest.ResponseRecorder {
+func performRequest(server *restServer, r *http.Request, t *testing.T, expectingCode int) *httptest.ResponseRecorder {
 	response := httptest.NewRecorder()
 
 	if r.Header.Get(authorizationKey) == "" {
@@ -131,34 +131,34 @@ func performRequest(server *Server, r *http.Request, t *testing.T, expectingCode
 	return response
 }
 
-func performFetchRequest[T any](path string, got *T, server *Server, t *testing.T) {
+func performFetchRequest[T any](path string, got *T, server *restServer, t *testing.T) {
 	r, _ := http.NewRequest(http.MethodGet, path, nil)
 	response := performRequest(server, r, t, http.StatusOK)
 	assertContentType(t, response, jsonContentType)
 	parseResponse(t, response.Body, &got)
 }
 
-func performGetTasksRequest(server *Server, t *testing.T) (got []repository.Task) {
+func performGetTasksRequest(server *restServer, t *testing.T) (got []repository.Task) {
 	performFetchRequest("/tasks", &got, server, t)
 	return
 }
 
-func performGetTasksByIdRequest(id int64, server *Server, t *testing.T) (got repository.Task) {
+func performGetTasksByIdRequest(id int64, server *restServer, t *testing.T) (got repository.Task) {
 	performFetchRequest(fmt.Sprintf("/tasks/%v", id), &got, server, t)
 	return
 }
 
-func performGetTasksByCompletionRequest(completion bool, server *Server, t *testing.T) (got []repository.Task) {
+func performGetTasksByCompletionRequest(completion bool, server *restServer, t *testing.T) (got []repository.Task) {
 	performFetchRequest(fmt.Sprintf("/tasks?completed=%v", completion), &got, server, t)
 	return
 }
 
-func performAddTaskRequest(server *Server, t *testing.T) *httptest.ResponseRecorder {
+func performAddTaskRequest(server *restServer, t *testing.T) *httptest.ResponseRecorder {
 	request, _ := http.NewRequest(http.MethodPost, "/tasks", nil)
 	return performRequest(server, request, t, http.StatusOK)
 }
 
-func performUpdateTaskRequest(task repository.Task, server *Server, t *testing.T) {
+func performUpdateTaskRequest(task repository.Task, server *restServer, t *testing.T) {
 	body, _ := json.Marshal(task)
 	request, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/tasks/%v", task.ID), bytes.NewBuffer(body))
 	performRequest(server, request, t, http.StatusOK)

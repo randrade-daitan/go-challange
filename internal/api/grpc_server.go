@@ -1,7 +1,7 @@
-package grpcApi
+package api
 
 import (
-	"challange/internal/grpcApi/proto"
+	"challange/internal/proto"
 	"challange/internal/repository"
 	"context"
 	"fmt"
@@ -14,21 +14,22 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type gRPCServer struct {
-	db      repository.Repository
+type grpcServer struct {
+	repo    repository.Repository
 	service *grpc.Server
 	proto.UnimplementedTaskServiceServer
 }
 
-func NewServer(db repository.Repository) *gRPCServer {
+// Creates a new gRPC/REST combo server.
+func NewGrpcServer(repo repository.Repository) *grpcServer {
 	service := grpc.NewServer()
-	server := new(gRPCServer)
-	server.db = db
+	server := new(grpcServer)
+	server.repo = repo
 	server.service = service
 	return server
 }
 
-func (server *gRPCServer) StartServing(port int) error {
+func (server *grpcServer) StartServing(port int) error {
 	err := server.serve(port)
 	if err != nil {
 		return err
@@ -37,7 +38,7 @@ func (server *gRPCServer) StartServing(port int) error {
 	return server.serveHTTPProxy(port)
 }
 
-func (server *gRPCServer) serve(port int) error {
+func (server *grpcServer) serve(port int) error {
 	proto.RegisterTaskServiceServer(server.service, server)
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
 
@@ -48,7 +49,7 @@ func (server *gRPCServer) serve(port int) error {
 	return err
 }
 
-func (server *gRPCServer) serveHTTPProxy(port int) error {
+func (server *grpcServer) serveHTTPProxy(port int) error {
 	mux := runtime.NewServeMux()
 
 	conn, connErr := grpc.DialContext(
@@ -73,50 +74,50 @@ func (server *gRPCServer) serveHTTPProxy(port int) error {
 	return httpServer.ListenAndServe()
 }
 
-func (server *gRPCServer) GetTasks(ctx context.Context, in *proto.Empty) (*proto.Tasks, error) {
-	t, err := server.db.GetAllTasks()
+func (server *grpcServer) GetTasks(ctx context.Context, in *proto.Empty) (*proto.Tasks, error) {
+	tasks, err := server.repo.GetAllTasks()
 	if err != nil {
 		return nil, err
 	}
-	return convertRepoTasks(t), nil
+	return convertRepoTasks(tasks), nil
 }
 
-func (server *gRPCServer) GetTaskByID(ctx context.Context, in *proto.TaskID) (*proto.Task, error) {
-	t, err := server.db.GetTaskByID(in.Id)
+func (server *grpcServer) GetTaskByID(ctx context.Context, in *proto.TaskID) (*proto.Task, error) {
+	task, err := server.repo.GetTaskByID(in.Id)
 	if err != nil {
 		return nil, err
 	}
-	return convertRepoTask(t), nil
+	return convertRepoTask(task), nil
 }
 
-func (server *gRPCServer) GetTasksByCompletion(ctx context.Context, in *proto.TaskCompletion) (*proto.Tasks, error) {
-	c := in.Completed
-	if c == nil {
+func (server *grpcServer) GetTasksByCompletion(ctx context.Context, in *proto.TaskCompletion) (*proto.Tasks, error) {
+	completed := in.Completed
+	if completed == nil {
 		return server.GetTasks(ctx, &proto.Empty{})
 	}
 
-	t, err := server.db.GetTasksByCompletion(*c)
+	tasks, err := server.repo.GetTasksByCompletion(*completed)
 	if err != nil {
 		return nil, err
 	}
-	return convertRepoTasks(t), nil
+	return convertRepoTasks(tasks), nil
 }
 
-func (server *gRPCServer) AddTask(ctx context.Context, in *proto.Task) (*proto.TaskID, error) {
+func (server *grpcServer) AddTask(ctx context.Context, in *proto.Task) (*proto.TaskID, error) {
 	newTask := convertDataTask(in)
-	id, err := server.db.AddTask(newTask)
+	id, err := server.repo.AddTask(newTask)
 	if err != nil {
 		return nil, err
 	}
 
-	r := &proto.TaskID{
+	result := &proto.TaskID{
 		Id: id,
 	}
-	return r, nil
+	return result, nil
 }
 
-func (server *gRPCServer) EditTask(ctx context.Context, in *proto.Task) (*proto.Empty, error) {
+func (server *grpcServer) EditTask(ctx context.Context, in *proto.Task) (*proto.Empty, error) {
 	newTask := convertDataTask(in)
-	err := server.db.EditTask(newTask)
+	err := server.repo.EditTask(newTask)
 	return &proto.Empty{}, err
 }

@@ -12,13 +12,14 @@ type Database struct {
 	*sql.DB
 }
 
-func NewDatabase() Repository {
+// Creates a new MySQL database.
+func NewMySqlRepository() Repository {
 	cfg := mysql.Config{
 		User:   DBUser(),
 		Passwd: DBPass(),
 		Net:    DBProtocol,
-		Addr:   DBURL,
-		DBName: DBName,
+		Addr:   DBURL(),
+		DBName: DBName(),
 	}
 
 	db, err := sql.Open("mysql", cfg.FormatDSN())

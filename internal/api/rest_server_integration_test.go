@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestRecordInsertAndGetTasks(t *testing.T) {
+func TestRestRecordInsertAndGetTasks(t *testing.T) {
 	tasks := []repository.Task{}
 	server, _ := newTestServer(tasks)
 

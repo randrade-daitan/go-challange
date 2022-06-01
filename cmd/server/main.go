@@ -2,24 +2,25 @@ package main
 
 import (
 	"challange/internal/api"
-	"challange/internal/orm"
 	"challange/internal/repository"
 	"log"
 	"os"
 )
 
 func main() {
-	var db repository.Repository
+	repo := newRepository()
+	server := api.NewRestServer(repo)
+	log.Fatal(server.StartServing(9090))
+}
 
+func newRepository() (repo repository.Repository) {
 	switch os.Getenv("DB_IMPL") {
 	case "vanilla":
-		db = repository.NewDatabase()
+		repo = repository.NewMySqlRepository()
 	case "orm":
-		db = orm.NewOrm()
+		repo = repository.NewOrmRepository()
 	default:
 		log.Fatal("could not init the database")
 	}
-
-	server := api.NewServer(db)
-	log.Fatal(server.StartServing(9090))
+	return
 }

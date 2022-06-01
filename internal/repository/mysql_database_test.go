@@ -7,17 +7,17 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 )
 
-func TestGetAllTasks(t *testing.T) {
+func TestMySqlGetAllTasks(t *testing.T) {
 	repo := RepositoryForTesting(testableDatabase, t)
 	repo.TestRepositoryGetTasks("SELECT * FROM task", t)
 }
 
-func TestGetTaskByID(t *testing.T) {
+func TestMySqlGetTaskByID(t *testing.T) {
 	repo := RepositoryForTesting(testableDatabase, t)
 	repo.TestRepositoryGetTaskById("SELECT * FROM task WHERE id = ?", t)
 }
 
-func TestAddTask(t *testing.T) {
+func TestMySqlAddTask(t *testing.T) {
 	task := Task{10, "DB Test", false}
 	repo := RepositoryForTesting(testableDatabase, t)
 
@@ -29,7 +29,7 @@ func TestAddTask(t *testing.T) {
 	repo.TestRepositoryAddTask(task, t)
 }
 
-func TestEditTask(t *testing.T) {
+func TestMySqlEditTask(t *testing.T) {
 	task := Task{2, "edited", true}
 	repo := RepositoryForTesting(testableDatabase, t)
 
@@ -41,7 +41,7 @@ func TestEditTask(t *testing.T) {
 	repo.TestRepositoryEditTask(task, t)
 }
 
-func TestGetTasksByCompletion(t *testing.T) {
+func TestMySqlGetTasksByCompletion(t *testing.T) {
 	q := "SELECT * FROM task WHERE completed = ?"
 
 	t.Run("fetch completed tasks", func(t *testing.T) {
@@ -49,7 +49,7 @@ func TestGetTasksByCompletion(t *testing.T) {
 		repo.TestRepositoryGetTasksByCompletion(q, t, true)
 	})
 
-	t.Run("fetch incompleted tasks", func(t *testing.T) {
+	t.Run("fetch uncompleted tasks", func(t *testing.T) {
 		repo := RepositoryForTesting(testableDatabase, t)
 		repo.TestRepositoryGetTasksByCompletion(q, t, false)
 	})

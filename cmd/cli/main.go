@@ -6,11 +6,11 @@ import (
 )
 
 func main() {
-	repo := repository.NewDatabase()
+	repo := repository.NewMySqlRepository()
 
 	allTasks, _ := repo.GetAllTasks()
-	for _, task := range allTasks {
-		fmt.Printf("Task %v: %q completion is %t.\n", task.ID, task.Name, task.Completed)
+	for _, t := range allTasks {
+		fmt.Printf("Task %v: %q completion is %t.\n", t.ID, t.Name, t.Completed)
 	}
 
 	currentTask, _ := repo.GetTaskByID(6)
